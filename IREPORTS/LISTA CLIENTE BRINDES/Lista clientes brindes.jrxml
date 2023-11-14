@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Lista clientes brindes" printOrder="Horizontal" pageWidth="1000" pageHeight="595" orientation="Landscape" columnWidth="960" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="1.4641000000000013"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<queryString>
+		<![CDATA[SELECT DISTINCT PAR.CODPARC as COD_PARCEIRO,
+	PAR.NOMEPARC AS NOME_CLIENTE,
+	PAR.RAZAOSOCIAL AS RAZAO_SOCIAL,
+	PAR.CGC_CPF AS CPF_CNPJ,
+	CID.NOMECID AS CIDADE,
+	UF.UF AS ESTADO,
+	PAR.TELEFONE,
+	PAR.EMAIL,
+	PAR.CODVEND AS CODIGO_VENDEDOR,
+	VEN.APELIDO AS NOME_VENDEDOR,
+	(CASE WHEN PAR.AD_PROSPECT='S' THEN 'SIM'
+		WHEN PAR.AD_PROSPECT='N' THEN 'NÃO' ELSE 'Não Selecionado' END) PROSPECT,
+	ISNULL((SELECT  TOP 1 OPCAO FROM TDDOPC OPC WHERE OPC.NUCAMPO= 9999990177 AND OPC.VALOR = PAR.AD_RAMOATIVIDADE),'Sem Ativ.') ATIVIDADE,
+	PAR.ATIVO,
+	PAR.AD_RAMOATIVIDADE,
+	PAR.DTALTER,
+	(SELECT TOP 1 DTNEG FROM TGFCAB CAB WHERE CAB.TIPMOV='V' AND CAB.CODPARC = PAR.CODPARC ORDER BY CAB.NUNOTA DESC) ULT_COMPRA,
+	CTT.NOMECONTATO,
+	ISNULL(CTT.TELEFONE,0) TELEFONE,
+	ISNULL(CTT.CELULAR,0)CELULAR,
+	ISNULL(CTT.AD_WHATSAPP,0)WHATSAPP,
+	CTT.EMAIL
+FROM TGFPAR PAR
+	INNER JOIN TGFVEN VEN ON VEN.CODVEND = PAR.CODVEND
+	INNER JOIN TSICID CID ON CID.CODCID = PAR.CODCID
+	INNER JOIN TSIUFS UF ON UF.CODUF = CID.UF
+	INNER JOIN TGFCTT CTT ON CTT.CODPARC = PAR.CODPARC
+WHERE PAR.CODTIPPARC = 10101000  AND (PAR.AD_INAPTO='N' OR PAR.AD_INAPTO IS NULL)]]>
+	</queryString>
+	<field name="COD_PARCEIRO" class="java.lang.Integer"/>
+	<field name="NOME_CLIENTE" class="java.lang.String"/>
+	<field name="RAZAO_SOCIAL" class="java.lang.String"/>
+	<field name="CPF_CNPJ" class="java.lang.String"/>
+	<field name="CIDADE" class="java.lang.String"/>
+	<field name="ESTADO" class="java.lang.String"/>
+	<field name="TELEFONE" class="java.lang.String"/>
+	<field name="EMAIL" class="java.lang.String"/>
+	<field name="CODIGO_VENDEDOR" class="java.lang.Short"/>
+	<field name="NOME_VENDEDOR" class="java.lang.String"/>
+	<field name="PROSPECT" class="java.lang.String"/>
+	<field name="ATIVIDADE" class="java.lang.String"/>
+	<field name="ATIVO" class="java.lang.String"/>
+	<field name="AD_RAMOATIVIDADE" class="java.lang.String"/>
+	<field name="DTALTER" class="java.sql.Timestamp"/>
+	<field name="ULT_COMPRA" class="java.sql.Timestamp"/>
+	<field name="NOMECONTATO" class="java.lang.String"/>
+	<field name="CELULAR" class="java.lang.String"/>
+	<field name="WHATSAPP" class="java.lang.String"/>
+	<variable name="COD_PARCEIRO_1" class="java.lang.Integer" resetType="Column" calculation="Sum">
+		<variableExpression><![CDATA[$F{COD_PARCEIRO}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="81" splitType="Stretch">
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="0" y="61" width="32" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Cod Parc]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="95" y="61" width="93" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Razao Social]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="32" y="61" width="63" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Nome Parceiro]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="188" y="61" width="71" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[CNPJ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="259" y="61" width="47" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Cidade]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="306" y="61" width="25" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[UF]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="331" y="61" width="84" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Email]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="415" y="61" width="40" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Cod Vend]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="455" y="61" width="57" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Nome Vendedor]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="512" y="61" width="40" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Prospect]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="552" y="61" width="36" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Ativo]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="588" y="61" width="62" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Ramo de Atividade]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="650" y="61" width="41" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Dt Alteração]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="691" y="61" width="66" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Ultima Compra]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="757" y="61" width="89" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Nome Contato	]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="846" y="61" width="53" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Celular]]></text>
+			</staticText>
+			<staticText>
+				<reportElement stretchType="RelativeToBandHeight" mode="Opaque" x="899" y="61" width="59" height="20" forecolor="#FFFFFF" backcolor="#3399FF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7" isBold="true" pdfFontName="Courier"/>
+				</textElement>
+				<text><![CDATA[Whatsapp]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="22" splitType="Stretch">
+			<textField>
+				<reportElement x="95" y="0" width="93" height="22"/>
+				<textElement verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{RAZAO_SOCIAL}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" evaluationTime="Column">
+				<reportElement mode="Transparent" x="0" y="0" width="32" height="22" backcolor="#99FFFF"/>
+				<textElement textAlignment="Center" markup="styled">
+					<font size="7" isStrikeThrough="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Integer"><![CDATA[$V{COD_PARCEIRO_1}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="32" y="0" width="63" height="22"/>
+				<textElement>
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{NOME_CLIENTE}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="188" y="0" width="71" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{CPF_CNPJ}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="258" y="0" width="48" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{CIDADE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="306" y="0" width="25" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{ESTADO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="330" y="0" width="85" height="22"/>
+				<textElement verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{EMAIL}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="415" y="0" width="40" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Short"><![CDATA[$F{CODIGO_VENDEDOR}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="455" y="0" width="57" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{NOME_VENDEDOR}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="551" y="0" width="37" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{ATIVO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="649" y="0" width="42" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{DTALTER}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="690" y="0" width="67" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{ULT_COMPRA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="757" y="0" width="89" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{NOMECONTATO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="846" y="0" width="53" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{CELULAR}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="588" y="0" width="62" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{ATIVIDADE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="512" y="0" width="40" height="22"/>
+				<textElement verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{PROSPECT}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="899" y="0" width="59" height="22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{WHATSAPP}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

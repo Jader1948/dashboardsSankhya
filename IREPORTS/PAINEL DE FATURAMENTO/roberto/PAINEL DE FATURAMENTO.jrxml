@@ -1,0 +1,815 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PAINEL DE FATURAMENTO" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="2.357947691000002"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<queryString>
+		<![CDATA[SELECT
+	(SELECT DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AS PERIODO_INI,
+	(SELECT DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE())))AS PERIODO_FIM,
+	SUM(CASE WHEN F.SINAL= 'FAT_BR' THEN (F.VL_TOTAL) END) AS FAT_BRIN,
+	SUM(CASE WHEN F.SINAL = 'FAT_LOJ' THEN (F.VL_TOTAL) END) AS FAT_LOJA,
+	SUM(CASE WHEN F.SINAL = 'FAT_EC' THEN (F.VL_TOTAL) END)AS FAT_ECOM,
+	SUM(CASE WHEN F.SINAL= 'TOT_FAT' THEN (F.VL_TOTAL) END)AS TOT_FAT,
+	SUM(CASE WHEN F.SINAL = 'A_FAT_BRI' THEN (F.VL_TOTAL) END)AS A_FAT_BRI,
+	SUM(CASE WHEN F.SINAL = 'A_FAT_LOJ' THEN (F.VL_TOTAL) END)AS A_FAT_LOJ,
+	SUM(CASE WHEN F.SINAL = 'A_FAT_E-C' THEN (F.VL_TOTAL) END)AS A_FAT_ECO,
+	SUM(CASE WHEN F.SINAL = 'TOT_A_FAT' THEN (F.VL_TOTAL)END) AS TOT_A_FAT
+
+FROM(
+
+SELECT SUM(Y.VLR_FATURAMENTO) AS VL_TOTAL, 'FAT_BR' SINAL
+FROM (
+SELECT
+	X.*, SUM(CASE WHEN X.CODTIPOPER IN (1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305) AND
+			1 = 1 THEN -1 * (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC)
+			WHEN 1 = 2 THEN (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) + ITE.VLRIPI
+			ELSE (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) END
+			+
+			CASE WHEN 1 = 1 THEN 0
+				WHEN 1 = 2 THEN ITE.VLRSUBST
+				ELSE 0 END) AS VLR_FATURAMENTO,
+	CAB.DTNEG AS DATA_FATURAMENTO
+FROM  (
+SELECT
+	CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	(SELECT TOP 1 NUNOTA FROM TGFVAR WHERE NUNOTA = CAB.NUNOTA) AS PEDIDO
+FROM TGFCAB CAB
+WHERE  CAB.DTNEG BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND CAB.CODNAT = 1010100
+AND CAB.CODTIPOPER IN (1100,1241,1258,1260,1319,1291,1277)
+AND CAB.CODTIPOPER NOT IN (900,1259,1200,1269,1266,1270,1293,1294)
+AND CAB.STATUSNOTA='L'
+AND CAB.CODEMP IN (1,2,3)
+GROUP BY CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER
+UNION
+SELECT CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	CAB.NUNOTA AS PEDIDO
+FROM TGFCAB CAB
+WHERE CAB.DTNEG BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND TIPMOV = 'D'
+AND CODNAT = 1010100
+AND  CAB.CODTIPOPER IN(1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305)
+AND STATUSNOTA='L'
+AND CAB.CODEMP IN (1,2,3)
+)X
+	LEFT JOIN TGFITE ITE ON ITE.NUNOTA = X.NUNOTA
+	LEFT JOIN TGFCAB CAB ON CAB.NUNOTA = X.PEDIDO
+
+GROUP BY X.NUNOTA,
+	X.DTNEG,
+	X.CODNAT,
+	X.STATUSNOTA,
+	X.CODTIPOPER,
+	X.PEDIDO,
+	CAB.DTNEG
+
+
+)Y
+
+UNION ALL
+
+SELECT SUM(Y.VLR_FATURAMENTO) AS VL_TOTAL, 'FAT_LOJ' SINAL
+FROM (
+
+SELECT
+	X.*, SUM(CASE WHEN X.CODTIPOPER IN (1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305) AND
+			1 = 1 THEN -1 *(ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC)
+			WHEN 1 = 2 THEN (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) + ITE.VLRIPI
+			ELSE  (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC - VLRREPRED)END
+			+
+			CASE WHEN 1 = 1 THEN 0
+				WHEN 1 = 2 THEN ITE.VLRSUBST
+				ELSE 0 END) AS VLR_FATURAMENTO,
+	CAB.DTNEG AS DATA_FATURAMENTO
+FROM  (
+SELECT
+	CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	(SELECT TOP 1 NUNOTA FROM TGFVAR WHERE NUNOTA = CAB.NUNOTA) AS PEDIDO
+FROM TGFCAB CAB
+WHERE  CAB.DTNEG BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND CAB.TIPMOV = 'V'
+AND CAB.CODNAT = 1010200
+AND CAB.CODTIPOPER IN (1100,1237,1241,1242,1247,1258,1260,1319,1291,1277)
+AND CAB.CODTIPOPER NOT IN (900,1259,1200,1269,1266,1270,1293,1294)
+AND CAB.STATUSNOTA='L'
+AND CAB.CODEMP IN(1,2,3)
+GROUP BY CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER
+UNION
+SELECT CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	CAB.NUNOTA AS PEDIDO
+FROM TGFCAB CAB
+WHERE CAB.DTNEG BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND TIPMOV = 'D'
+AND CODNAT = 1010200
+AND  CAB.CODTIPOPER IN(1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305)
+AND STATUSNOTA='L'
+AND CAB.CODEMP  IN (1,2,3)
+)X
+	INNER JOIN TGFITE ITE ON ITE.NUNOTA = X.NUNOTA
+	INNER JOIN TGFCAB CAB ON CAB.NUNOTA = X.PEDIDO
+
+GROUP BY X.NUNOTA,
+	X.DTNEG,
+	X.CODNAT,
+	X.STATUSNOTA,
+	X.CODTIPOPER,
+	X.PEDIDO,
+	CAB.DTNEG
+)Y
+
+UNION ALL
+
+ SELECT B.VL_TOTAL AS VL_TOTAL, 'FAT_EC' AS SINAL FROM (
+	SELECT SUM(VALOR) AS VL_TOTAL
+	FROM AD_VALORECOMMERCE
+WHERE DT BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+
+)B
+
+UNION ALL
+
+SELECT SUM(A.VL_TOTAL) AS VL_TOTAL, 'TOT_FAT' SINAL FROM (
+
+SELECT  SUM(Y.VLR_FATURAMENTO) AS VL_TOTAL, 'N' AS SINAL FROM
+(
+SELECT
+	X.*, SUM(CASE WHEN X.CODTIPOPER IN (1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305) AND
+			1 = 1 THEN -1 *(ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC)
+			WHEN 1 = 2 THEN (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) + ITE.VLRIPI
+			ELSE (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC - VLRREPRED) END
+			+
+			CASE WHEN 1 = 1 THEN 0
+				WHEN 1 = 2 THEN ITE.VLRSUBST
+				ELSE 0 END) AS VLR_FATURAMENTO,
+	CAB.DTNEG AS DATA_FATURAMENTO
+	FROM  (
+SELECT
+	CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	(SELECT TOP 1 NUNOTA FROM TGFVAR WHERE NUNOTA = CAB.NUNOTA) AS PEDIDO
+FROM TGFCAB CAB
+WHERE  CAB.DTNEG BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND CAB.TIPMOV = 'V'
+AND CAB.CODNAT = 1010100
+AND CAB.CODTIPOPER IN (1100,1241,1247,1258,1260,1319,1291,1277)
+AND CAB.CODTIPOPER NOT IN (900,1259,1200,1269,1266,1270,1293,1294)
+AND CAB.STATUSNOTA='L'
+GROUP BY CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER
+UNION
+SELECT CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	CAB.NUNOTA AS PEDIDO
+FROM TGFCAB CAB
+WHERE CAB.DTNEG BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND TIPMOV = 'D'
+AND CODNAT = 1010100
+AND  CAB.CODTIPOPER IN(1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305)
+AND STATUSNOTA='L'
+)X
+	INNER JOIN TGFITE ITE ON ITE.NUNOTA = X.NUNOTA
+	INNER JOIN TGFCAB CAB ON CAB.NUNOTA = X.PEDIDO
+
+GROUP BY X.NUNOTA,
+	X.DTNEG,
+	X.CODNAT,
+	X.STATUSNOTA,
+	X.CODTIPOPER,
+	X.PEDIDO,
+	CAB.DTNEG
+)Y
+
+UNION ALL
+
+SELECT  SUM(Z.VLR_FATURAMENTO) AS VL_TOTAL, 'N' AS SINAL FROM
+(
+SELECT
+	X.*, SUM(CASE WHEN X.CODTIPOPER IN (1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305) AND
+			1 = 1 THEN -1 *(ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC)
+			WHEN 1 = 2 THEN (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) + ITE.VLRIPI
+			ELSE (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC - VLRREPRED)END
+			+
+			CASE WHEN 1 = 1 THEN 0
+				WHEN 1 = 2 THEN ITE.VLRSUBST
+				ELSE 0 END) AS VLR_FATURAMENTO,
+	CAB.DTNEG AS DATA_FATURAMENTO
+	FROM  (
+SELECT
+	CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	(SELECT TOP 1 NUNOTA FROM TGFVAR WHERE NUNOTA = CAB.NUNOTA) AS PEDIDO
+FROM TGFCAB CAB
+WHERE  CAB.DTNEG BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND CAB.TIPMOV = 'V'
+AND CAB.CODNAT = 1010200
+AND CAB.CODTIPOPER IN (1100,1237,1241,1242,1247,1258,1260,1319,1291,1277)
+AND CAB.CODTIPOPER NOT IN (900,1259,1200,1269,1266,1270,1293,1294)
+AND CAB.STATUSNOTA='L'
+GROUP BY CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER
+UNION
+SELECT CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	CAB.NUNOTA AS PEDIDO
+FROM TGFCAB CAB
+WHERE CAB.DTNEG BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND TIPMOV = 'D'
+AND CODNAT = 1010200
+AND  CAB.CODTIPOPER IN(1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305)
+AND STATUSNOTA='L'
+)X
+	INNER JOIN TGFITE ITE ON ITE.NUNOTA = X.NUNOTA
+	INNER JOIN TGFCAB CAB ON CAB.NUNOTA = X.PEDIDO
+
+GROUP BY X.NUNOTA,
+	X.DTNEG,
+	X.CODNAT,
+	X.STATUSNOTA,
+	X.CODTIPOPER,
+	X.PEDIDO,
+	CAB.DTNEG
+)Z
+
+UNION ALL
+
+ SELECT B.VL_TOTAL, 'X' AS SINAL FROM (
+SELECT SUM(VALOR) AS VL_TOTAL
+	FROM AD_VALORECOMMERCE
+WHERE DT BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+)B
+)A
+
+UNION ALL
+
+SELECT  SUM(Y.VLR_FATURAMENTO) AS VL_TOTAL, 'A_FAT_BRI' SINAL  FROM (
+SELECT
+	X.*, SUM(CASE WHEN X.CODTIPOPER IN (1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305) AND
+			1 = 1 THEN -1 *(ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC)
+			WHEN 1 = 2 THEN (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) + ITE.VLRIPI
+			ELSE (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC)END
+			+
+			CASE WHEN 1 = 1 THEN 0
+				WHEN 1 = 2 THEN ITE.VLRSUBST
+				ELSE 0 END) AS VLR_FATURAMENTO,
+	CAB.DTNEG AS DATA_FATURAMENTO
+	FROM  (
+SELECT
+	CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	(SELECT TOP 1 NUNOTA FROM TGFVAR WHERE NUNOTAORIG = CAB.NUNOTA) AS NFE
+FROM TGFCAB CAB
+WHERE  CAB.DTNEG BETWEEN '01/01/1900' AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND CAB.TIPMOV = 'P'
+AND CAB.CODNAT = 1010100
+AND CAB.CODTIPOPER NOT IN (900,1259,1200,1269,1266,1270,1293,1294)
+AND CAB.STATUSNOTA='L'
+GROUP BY CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER
+UNION
+SELECT CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	CAB.NUNOTA AS NFE
+FROM TGFCAB CAB
+WHERE CAB.DTNEG BETWEEN '01/01/1900' AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND TIPMOV = 'D'
+AND CODNAT = 1010100
+AND  CAB.CODTIPOPER IN(1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305)
+AND STATUSNOTA='L'
+)X
+	INNER JOIN TGFITE ITE ON ITE.NUNOTA = X.NUNOTA
+	LEFT JOIN TGFCAB CAB ON CAB.NUNOTA = X.NFE
+WHERE CAB.NUNOTA IS NULL
+
+GROUP BY X.NUNOTA,
+	X.DTNEG,
+	X.CODNAT,
+	X.STATUSNOTA,
+	X.CODTIPOPER,
+	X.NFE,
+	CAB.DTNEG
+)Y
+
+
+UNION ALL
+
+SELECT  ISNULL(SUM(Y.VLR_FATURAMENTO),0) AS VL_TOTAL, 'A_FAT_LOJ' SINAL  FROM (
+SELECT
+	X.*, SUM(CASE WHEN X.CODTIPOPER IN (1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305) AND
+			1 = 1 THEN -1 *(ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC)
+			WHEN 1 = 2 THEN (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) + ITE.VLRIPI
+			ELSE (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC)END
+			+
+			CASE WHEN 1 = 1 THEN 0
+				WHEN 1 = 2 THEN ITE.VLRSUBST
+				ELSE 0 END) AS VLR_FATURAMENTO,
+	CAB.DTNEG AS DATA_FATURAMENTO
+	FROM  (
+SELECT
+	CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	(SELECT TOP 1 NUNOTA FROM TGFVAR WHERE NUNOTAORIG = CAB.NUNOTA) AS NFE
+FROM TGFCAB CAB
+WHERE  CAB.DTNEG BETWEEN '01/01/1900' AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND CAB.TIPMOV = 'P'
+AND CAB.CODNAT = 1010200
+AND CAB.CODTIPOPER NOT IN (900,1259,1200,1269,1266,1270,1293,1294)
+AND CAB.STATUSNOTA='L'
+GROUP BY CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER
+UNION
+SELECT CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	CAB.NUNOTA AS NFE
+FROM TGFCAB CAB
+WHERE CAB.DTNEG BETWEEN '01/01/1900' AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND TIPMOV = 'D'
+AND CODNAT = 1010200
+AND  CAB.CODTIPOPER IN(1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305)
+AND STATUSNOTA='L'
+)X
+	INNER JOIN TGFITE ITE ON ITE.NUNOTA = X.NUNOTA
+	LEFT JOIN TGFCAB CAB ON CAB.NUNOTA = X.NFE
+WHERE CAB.NUNOTA IS NULL
+
+GROUP BY X.NUNOTA,
+	X.DTNEG,
+	X.CODNAT,
+	X.STATUSNOTA,
+	X.CODTIPOPER,
+	X.NFE,
+	CAB.DTNEG
+)Y
+
+UNION ALL
+
+SELECT  ISNULL(C1.VLR_NOTA, 0) AS VL_TOTAL, 'A_FAT_E-C' SINAL
+FROM TGFNAT N1
+	LEFT JOIN ( SELECT CAB.CODNAT ,
+                   SUM((CASE WHEN 1 = 2 THEN (CAB.VLRNOTA - CAB.VLRIPI - CAB.VLRSUBST) + CAB.VLRIPI
+                             WHEN 1 = 1 THEN (CAB.VLRNOTA - CAB.VLRIPI - CAB.VLRSUBST)
+                             ELSE (CAB.VLRNOTA - CAB.VLRIPI - CAB.VLRSUBST) + CAB.VLRIPI END
+                              +
+                              CASE WHEN 1 = 2 THEN CAB.VLRSUBST
+                              WHEN 1 = 1 THEN 0
+                              ELSE CAB.VLRSUBST END)) AS VLR_NOTA
+                FROM TGFCAB CAB
+                WHERE CAB.TIPMOV     = 'P'
+                AND   CAB.STATUSNOTA = 'L'
+                AND   CAB.CODEMP IN (1,2,3)
+                AND   CAB.CODTIPOPER IN(1000,1238,1240,1246,1255,1263,1268,1290,1310)
+				AND CAB.DTNEG BETWEEN '01/01/1990' AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+                AND   NOT EXISTS (SELECT 1 FROM TGFVAR WHERE NUNOTAORIG = CAB.NUNOTA)
+GROUP BY CAB.CODNAT) C1
+     ON N1.CODNAT = C1.CODNAT
+WHERE N1.CODNAT IN(1010300)
+
+
+UNION ALL
+
+
+SELECT SUM(W.VLR_FATURAMENTO) AS VL_TOTAL, 'TOT_A_FAT' SINAL FROM(
+
+SELECT  SUM(Y.VLR_FATURAMENTO) AS VLR_FATURAMENTO  FROM (
+SELECT
+	X.*, SUM(CASE WHEN X.CODTIPOPER IN (1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305) AND
+			1 = 1 THEN -1 * (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC)
+			WHEN 1 = 2 THEN (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) + ITE.VLRIPI
+			ELSE (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) END
+			+
+			CASE WHEN 1 = 1 THEN 0
+				WHEN 1 = 2 THEN ITE.VLRSUBST
+				ELSE 0 END) AS VLR_FATURAMENTO,
+	CAB.DTNEG AS DATA_FATURAMENTO
+	FROM  (
+SELECT
+	CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	(SELECT TOP 1 NUNOTA FROM TGFVAR WHERE NUNOTAORIG = CAB.NUNOTA) AS NFE
+FROM TGFCAB CAB
+WHERE  CAB.DTNEG BETWEEN '01/01/1990' AND  DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND CAB.TIPMOV = 'P'
+AND CAB.CODNAT = 1010100
+AND CAB.CODTIPOPER NOT IN (900,1259,1200,1269,1266,1270,1293,1294)
+AND CAB.STATUSNOTA='L'
+GROUP BY CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER
+UNION
+SELECT CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	CAB.NUNOTA AS NFE
+FROM TGFCAB CAB
+WHERE CAB.DTNEG BETWEEN '01/01/1990' AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND TIPMOV = 'D'
+AND CODNAT = 1010100
+AND  CAB.CODTIPOPER IN(1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305)
+AND STATUSNOTA='L'
+)X
+	INNER JOIN TGFITE ITE ON ITE.NUNOTA = X.NUNOTA
+	LEFT JOIN TGFCAB CAB ON CAB.NUNOTA = X.NFE
+WHERE CAB.NUNOTA IS NULL
+
+GROUP BY X.NUNOTA,
+	X.DTNEG,
+	X.CODNAT,
+	X.STATUSNOTA,
+	X.CODTIPOPER,
+	X.NFE,
+	CAB.DTNEG
+)Y
+
+UNION ALL
+
+SELECT  SUM(X.VLR_FATURAMENTO) AS VLR_FATURAMENTO  FROM (
+SELECT
+	X.*, SUM(CASE WHEN X.CODTIPOPER IN (1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305) AND
+			1 = 1 THEN -1 * (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC)
+			WHEN 1 = 2 THEN (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) + ITE.VLRIPI
+			ELSE (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) END
+			+
+			CASE WHEN 1 = 1 THEN 0
+				WHEN 1 = 2 THEN ITE.VLRSUBST
+				ELSE 0 END) AS VLR_FATURAMENTO,
+	CAB.DTNEG AS DATA_FATURAMENTO
+	FROM  (
+SELECT
+	CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	(SELECT TOP 1 NUNOTA FROM TGFVAR WHERE NUNOTAORIG = CAB.NUNOTA) AS NFE
+FROM TGFCAB CAB
+WHERE  CAB.DTNEG BETWEEN '01/01/1990' AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND CAB.TIPMOV = 'P'
+AND CAB.CODNAT = 1010200
+AND CAB.CODTIPOPER NOT IN (900,1259,1200,1269,1266,1270,1293,1294)
+AND CAB.STATUSNOTA='L'
+GROUP BY CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER
+UNION
+SELECT CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	CAB.NUNOTA AS NFE
+FROM TGFCAB CAB
+WHERE CAB.DTNEG BETWEEN '01/01/1990' AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND TIPMOV = 'D'
+AND CODNAT = 1010200
+AND  CAB.CODTIPOPER IN(1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305)
+AND STATUSNOTA='L'
+)X
+	INNER JOIN TGFITE ITE ON ITE.NUNOTA = X.NUNOTA
+	LEFT JOIN TGFCAB CAB ON CAB.NUNOTA = X.NFE
+WHERE CAB.NUNOTA IS NULL
+
+GROUP BY X.NUNOTA,
+	X.DTNEG,
+	X.CODNAT,
+	X.STATUSNOTA,
+	X.CODTIPOPER,
+	X.NFE,
+	CAB.DTNEG
+)X
+
+UNION ALL
+
+SELECT ISNULL(C1.VLR_FATURAMENTO, 0) AS VLR_FATURAMENTO
+
+FROM TGFNAT N1 LEFT JOIN (
+		SELECT CAB.CODNAT ,
+		SUM((CASE WHEN 1 = 2 THEN (CAB.VLRNOTA - CAB.VLRIPI - CAB.VLRSUBST) + CAB.VLRIPI
+                  WHEN 1 = 1 THEN (CAB.VLRNOTA - CAB.VLRIPI - CAB.VLRSUBST)
+             ELSE (CAB.VLRNOTA - CAB.VLRIPI - CAB.VLRSUBST) + CAB.VLRIPI END
+             +
+             CASE WHEN 1 = 2 THEN CAB.VLRSUBST
+                  WHEN 1 = 1 THEN 0
+             ELSE CAB.VLRSUBST END)) AS VLR_FATURAMENTO
+          FROM TGFCAB CAB
+          WHERE CAB.TIPMOV     = 'P'
+          AND   CAB.STATUSNOTA = 'L'
+          AND   CAB.CODEMP IN (1,2,3)
+          AND   CAB.CODTIPOPER IN(1000,1238,1240,1246,1255,1263,1268,1290,1310)
+	     AND CAB.DTNEG BETWEEN '01/01/1990' AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+          AND   NOT EXISTS (SELECT 1 FROM TGFVAR WHERE NUNOTAORIG = CAB.NUNOTA)
+          GROUP BY CAB.CODNAT
+) C1
+     ON N1.CODNAT = C1.CODNAT
+     WHERE N1.CODNAT IN(1010300)
+
+)W
+
+
+)F]]>
+	</queryString>
+	<field name="PERIODO_INI" class="java.sql.Timestamp"/>
+	<field name="PERIODO_FIM" class="java.sql.Timestamp"/>
+	<field name="FAT_BRIN" class="java.lang.Double"/>
+	<field name="FAT_LOJA" class="java.lang.Double"/>
+	<field name="FAT_ECOM" class="java.lang.Double"/>
+	<field name="TOT_FAT" class="java.lang.Double"/>
+	<field name="A_FAT_BRI" class="java.lang.Double"/>
+	<field name="A_FAT_LOJ" class="java.lang.Double"/>
+	<field name="A_FAT_ECO" class="java.lang.Double"/>
+	<field name="TOT_A_FAT" class="java.lang.Double"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="79" splitType="Stretch">
+			<frame>
+				<reportElement mode="Opaque" x="0" y="0" width="555" height="79" backcolor="#0074D0"/>
+				<staticText>
+					<reportElement mode="Transparent" x="0" y="0" width="555" height="63" forecolor="#FFFFFF"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Lucida Sans" size="24" isBold="true"/>
+					</textElement>
+					<text><![CDATA[PAINEL DE FATURAMENTO]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="176" y="63" width="65" height="16" forecolor="#FFFFFF"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Periodo de:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="289" y="64" width="27" height="14" forecolor="#FFFFFF"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Até]]></text>
+				</staticText>
+				<textField pattern="dd/MM/yyyy">
+					<reportElement x="240" y="65" width="62" height="14" forecolor="#FFFFFF"/>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{PERIODO_INI}]]></textFieldExpression>
+				</textField>
+				<textField pattern="dd/MM/yyyy">
+					<reportElement x="316" y="65" width="60" height="14" forecolor="#FFFFFF"/>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{PERIODO_FIM}]]></textFieldExpression>
+				</textField>
+			</frame>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="35" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="43" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="14" width="139" height="29" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="139" y="14" width="139" height="29" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="278" y="14" width="139" height="29" backcolor="#0074D0"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="139" y="14" width="139" height="29" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[FATURAMENTO - LOJAS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="14" width="139" height="29" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[FATURAMENTO - BRINDES]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="416" y="14" width="139" height="29" backcolor="#007D18"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="278" y="14" width="138" height="29" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[FATURAMENTO - E COMMERCE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="416" y="14" width="139" height="29" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[TOTAL FATURAMENTO]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="76" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="139" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="139" y="0" width="139" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="278" y="0" width="139" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="416" y="0" width="139" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="47" width="139" height="29" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="139" y="47" width="139" height="29" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="278" y="47" width="139" height="29" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="416" y="47" width="139" height="29" backcolor="#FFDE10"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="0" y="47" width="139" height="29" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Á FATURAR - BRINDES]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="139" y="47" width="139" height="29" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Á FATURAR - LOJAS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="278" y="47" width="138" height="29" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Á FATURAR - ECOMMERCE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="416" y="47" width="139" height="29" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[TOTAL Á FATURAR]]></text>
+			</staticText>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="0" y="0" width="139" height="29"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Double"><![CDATA[$F{FAT_BRIN}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="139" y="0" width="139" height="29"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Double"><![CDATA[$F{FAT_LOJA}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="278" y="0" width="138" height="29"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Double"><![CDATA[$F{FAT_ECOM}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="417" y="0" width="138" height="29"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Double"><![CDATA[$F{TOT_FAT}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="15" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="10" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="44" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="139" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="139" y="0" width="139" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="278" y="0" width="139" height="29"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="416" y="0" width="139" height="29"/>
+			</rectangle>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="0" y="0" width="139" height="29"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Double"><![CDATA[$F{A_FAT_BRI}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="139" y="0" width="139" height="29"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Double"><![CDATA[$F{A_FAT_LOJ}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="278" y="0" width="138" height="29"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Double"><![CDATA[$F{A_FAT_ECO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="416" y="0" width="139" height="29"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Double"><![CDATA[$F{TOT_A_FAT}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

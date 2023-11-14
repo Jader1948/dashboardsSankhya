@@ -1,0 +1,15 @@
+select pro.codprod as Codigo,
+	pro.referencia as Referencia,
+	pro.descrprod as Descricao,
+	est.estoque as Estoque,
+	est.Reservado AS Reservado,
+	(SELECT est.estoque - est.RESERVADO) as Quantidade_Disponivel,
+	loc.codlocal as Local,
+	loc.descrlocal as Descricao_Local
+from tgfest est
+inner join tgfpro pro on pro.codprod = est.codprod
+inner join tgfloc loc on loc.codlocal = est.codlocal
+where (est.codemp IN(1)) and (est.estoque > 0 or est.reservado > 0) AND
+	PRO.CODPROD <> 36236
+order by loc.codlocal,
+	pro.referencia

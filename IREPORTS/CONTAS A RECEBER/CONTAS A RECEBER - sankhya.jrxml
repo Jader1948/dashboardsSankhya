@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PAINEL DE FATURAMENTO" language="groovy" pageWidth="595" pageHeight="600" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="2.1435888100000025"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="543"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="Table Dataset 1"/>
+	<subDataset name="dataset1"/>
+	<queryString>
+		<![CDATA[SELECT SUM(CASE WHEN  MONTH(DTVENC) = 1 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN  VLRDESDOB
+			ELSE 0 END) JANEIRO,
+	SUM(CASE WHEN MONTH(DTVENC) = 2 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN VLRDESDOB
+			ELSE 0 END) FEVEREIRO,
+	SUM(CASE WHEN MONTH(DTVENC) = 3 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN VLRDESDOB
+			ELSE 0 END) MARCO,
+	SUM(CASE WHEN MONTH(DTVENC) = 4 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN VLRDESDOB
+			ELSE 0 END) ABRIL,
+	SUM(CASE WHEN MONTH(DTVENC) = 5 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN VLRDESDOB
+			ELSE 0 END) MAIO,
+	SUM(CASE WHEN MONTH(DTVENC) = 6 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN VLRDESDOB
+			ELSE 0 END) JUNHO,
+	SUM(CASE WHEN MONTH(DTVENC) = 7 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN VLRDESDOB
+			ELSE 0 END) JULHO,
+	SUM(CASE WHEN MONTH(DTVENC) = 8 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN VLRDESDOB
+			ELSE 0 END) AGOSTO,
+	SUM(CASE WHEN MONTH(DTVENC) = 9 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN VLRDESDOB
+			ELSE 0 END) SETEMBRO,
+	SUM(CASE WHEN MONTH(DTVENC) = 10 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN VLRDESDOB
+			ELSE 0 END) OUTUBRO,
+	SUM(CASE WHEN MONTH(DTVENC) = 11 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN VLRDESDOB
+			ELSE 0 END) NOVEMBRO,
+	SUM(CASE WHEN MONTH(DTVENC) = 12 AND YEAR(DTVENC) = YEAR(GETDATE()) THEN VLRDESDOB
+			ELSE 0 END) DEZEMBRO,
+	SUM(CASE WHEN DTVENC < CAST(CAST(YEAR(GETDATE())AS CHAR(4))+ '-01-01' AS DATE) THEN VLRDESDOB ELSE 0 END) AS VALOR_ANTES_PERIODO,
+	SUM(CASE WHEN DTVENC BETWEEN CAST(CAST(YEAR(GETDATE())AS CHAR(4))+ '-01-01' AS DATE) AND DATEADD(DAY, DATEDIFF(DAY, 1, GETDATE()), 0) THEN VLRDESDOB ELSE 0 END) AS ATRASO_ONTEM,
+	SUM(CASE WHEN DTVENC < DATEADD(DAY, DATEDIFF(DAY, 1, GETDATE()), 1) THEN VLRDESDOB ELSE 0 END) AS TOTAL_EM_ATRASO,
+	SUM(CASE WHEN YEAR(DTVENC) = YEAR(GETDATE())  THEN VLRDESDOB ELSE 0 END) AS VALOR_DENTRO_PERIODO,
+	SUM(CASE WHEN YEAR(DTVENC) > YEAR(GETDATE()) THEN VLRDESDOB ELSE 0 END) AS VALOR_FORA_PERIODO,
+	SUM(VLRDESDOB) AS VALOR_TOTAL
+FROM TGFFIN
+WHERE DHBAIXA IS NULL
+AND CODEMP IN(1,2,3)
+and CODNAT  IN (1010200,1010100,5090000)
+AND CODTIPOPER IN (1100,1241,1237,1242,1247,1258,1291,1300)
+AND PROVISAO = 'N'
+AND RECDESP = 1
+AND CODTIPTIT IN (
+	CASE WHEN YEAR(DTVENC) >= YEAR(GETDATE()) THEN (CASE WHEN CODTIPTIT = 4 THEN 4 WHEN CODTIPTIT = 36 THEN 36 END) ELSE 4 END
+	)]]>
+	</queryString>
+	<field name="JANEIRO" class="java.math.BigDecimal"/>
+	<field name="FEVEREIRO" class="java.math.BigDecimal"/>
+	<field name="MARCO" class="java.math.BigDecimal"/>
+	<field name="ABRIL" class="java.math.BigDecimal"/>
+	<field name="MAIO" class="java.math.BigDecimal"/>
+	<field name="JUNHO" class="java.math.BigDecimal"/>
+	<field name="JULHO" class="java.math.BigDecimal"/>
+	<field name="AGOSTO" class="java.math.BigDecimal"/>
+	<field name="SETEMBRO" class="java.math.BigDecimal"/>
+	<field name="OUTUBRO" class="java.math.BigDecimal"/>
+	<field name="NOVEMBRO" class="java.math.BigDecimal"/>
+	<field name="DEZEMBRO" class="java.math.BigDecimal"/>
+	<field name="VALOR_ANTES_PERIODO" class="java.math.BigDecimal"/>
+	<field name="ATRASO_ONTEM" class="java.math.BigDecimal"/>
+	<field name="TOTAL_EM_ATRASO" class="java.math.BigDecimal"/>
+	<field name="VALOR_DENTRO_PERIODO" class="java.math.BigDecimal"/>
+	<field name="VALOR_FORA_PERIODO" class="java.math.BigDecimal"/>
+	<field name="VALOR_TOTAL" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="73" splitType="Stretch">
+			<frame>
+				<reportElement mode="Opaque" x="0" y="0" width="555" height="73" backcolor="#0074D0"/>
+				<staticText>
+					<reportElement mode="Transparent" x="0" y="0" width="555" height="58" forecolor="#FFFFFF"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Lucida Sans" size="24" isBold="true"/>
+					</textElement>
+					<text><![CDATA[CONTAS À RECEBER 2023]]></text>
+				</staticText>
+			</frame>
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy HH:mm " isBlankWhenNull="false">
+				<reportElement x="192" y="56" width="176" height="15" isPrintWhenDetailOverflows="true" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.util.Date"><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="418" splitType="Stretch">
+			<rectangle>
+				<reportElement x="10" y="10" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="10" y="34" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Transparent" x="10" y="10" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[JANEIRO]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="147" y="10" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Transparent" x="147" y="10" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[FEVEREIRO]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="284" y="10" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Transparent" x="284" y="10" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[MARÇO]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="417" y="10" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Transparent" x="417" y="10" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ABRIL]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="147" y="34" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="284" y="34" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="417" y="34" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="10" y="81" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="284" y="81" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="147" y="81" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="417" y="81" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="10" y="105" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="147" y="105" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="284" y="105" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="417" y="105" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="10" y="146" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="147" y="146" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="284" y="146" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="417" y="146" width="122" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="10" y="170" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="147" y="170" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="284" y="170" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="417" y="170" width="122" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Transparent" x="10" y="81" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[MAIO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="147" y="81" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[JUNHO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="284" y="81" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[JULHO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="417" y="81" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[AGOSTO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="10" y="146" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[SETEMBRO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="147" y="146" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[OUTUBRO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="284" y="146" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[NOVEMBRO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="417" y="146" width="122" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[DEZEMBRO]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="32" y="223" width="151" height="24" forecolor="#000000" backcolor="#D00F0F"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="115" y="299" width="151" height="24" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="298" y="299" width="154" height="24" backcolor="#999999"/>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Transparent" x="31" y="223" width="152" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[EM ATRASO ANTES DO PERIODO:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="115" y="299" width="151" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[VALOR DENTRO DO PERIODO:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="298" y="299" width="154" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[VALOR DEPOIS DO PERIODO:]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="133" y="374" width="151" height="24" backcolor="#999999"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="32" y="247" width="151" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="115" y="323" width="151" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="298" y="323" width="154" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="284" y="374" width="151" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Transparent" x="135" y="374" width="149" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[VALOR TOTAL:]]></text>
+			</staticText>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="10" y="34" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{JANEIRO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="147" y="34" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{FEVEREIRO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="284" y="34" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{MARCO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="417" y="34" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{ABRIL}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="10" y="105" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{MAIO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="147" y="105" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{JUNHO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="284" y="105" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{JULHO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="417" y="105" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{AGOSTO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="10" y="170" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{SETEMBRO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="147" y="170" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{OUTUBRO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="284" y="170" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{NOVEMBRO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="417" y="170" width="122" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{DEZEMBRO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="32" y="247" width="151" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{VALOR_ANTES_PERIODO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="115" y="323" width="151" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{VALOR_DENTRO_PERIODO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="298" y="323" width="154" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{VALOR_FORA_PERIODO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="284" y="374" width="151" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{VALOR_TOTAL}]]></textFieldExpression>
+			</textField>
+			<rectangle>
+				<reportElement x="203" y="223" width="154" height="24" backcolor="#D00F0F"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="203" y="247" width="154" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="368" y="223" width="154" height="24" backcolor="#D00F0F"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="368" y="247" width="154" height="24" backcolor="#FFFFFF"/>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Transparent" x="204" y="223" width="151" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[EM ATRASO NO PERIODO ATE ONTEM:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="368" y="223" width="154" height="24" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Lucida Sans" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[TOTAL EM ATRASO:]]></text>
+			</staticText>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="203" y="247" width="152" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{ATRASO_ONTEM}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="368" y="247" width="152" height="24"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{TOTAL_EM_ATRASO}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

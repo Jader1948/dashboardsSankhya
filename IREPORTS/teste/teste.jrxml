@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="teste" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="1.6105100000000008"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<queryString>
+		<![CDATA[SELECT SUM(Y.VLR_FATURAMENTO) AS VL_TOTAL, 'N' SINAL
+FROM (
+
+SELECT
+	X.*, SUM(CASE WHEN X.CODTIPOPER IN (1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305) AND
+			1 = 1 THEN -1 * (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC)
+			WHEN 1 = 2 THEN (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) + ITE.VLRIPI
+			ELSE (ITE.QTDNEG*ITE.VLRUNIT - ITE.VLRDESC) END
+			+
+			CASE WHEN 1 = 1 THEN 0
+				WHEN 1 = 2 THEN ITE.VLRSUBST
+				ELSE 0 END) AS VLR_FATURAMENTO,
+	CAB.DTNEG AS DATA_FATURAMENTO
+FROM  (
+SELECT
+	CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	(SELECT TOP 1 NUNOTA FROM TGFVAR WHERE NUNOTA = CAB.NUNOTA) AS PEDIDO
+FROM TGFCAB CAB
+WHERE  CAB.DTNEG BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND CAB.TIPMOV = 'V'
+AND CAB.CODNAT = 1010100
+AND CAB.CODTIPOPER IN (1100,1241,1258,1260,1319,1291,1277)
+AND CAB.CODTIPOPER NOT IN (900,1259,1200,1269,1266,1270,1293,1294)
+AND CAB.STATUSNOTA='L'
+AND CAB.CODEMP IN (1,2,3)
+GROUP BY CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER
+UNION
+SELECT CAB.NUNOTA,
+	CAB.DTNEG,
+	CAB.CODNAT,
+	CAB.STATUSNOTA,
+	CAB.CODTIPOPER,
+	CAB.NUNOTA AS PEDIDO
+FROM TGFCAB CAB
+WHERE CAB.DTNEG BETWEEN DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0) AND DATEADD(DD, -DAY(DATEADD(M, 1, GETDATE())), DATEADD(M, 1, GETDATE()))
+AND TIPMOV = 'D'
+AND CODNAT = 1010100
+AND  CAB.CODTIPOPER IN(1200,1201,1235,1236,1248,1249,1264,1265,1293,1304,1305)
+AND STATUSNOTA='L'
+AND CAB.CODEMP IN (1,2,3)
+)X
+	LEFT JOIN TGFITE ITE ON ITE.NUNOTA = X.NUNOTA
+	LEFT JOIN TGFCAB CAB ON CAB.NUNOTA = X.PEDIDO
+
+GROUP BY X.NUNOTA,
+	X.DTNEG,
+	X.CODNAT,
+	X.STATUSNOTA,
+	X.CODTIPOPER,
+	X.PEDIDO,
+	CAB.DTNEG
+
+)Y]]>
+	</queryString>
+	<field name="VL_TOTAL" class="java.lang.Double"/>
+	<field name="SINAL" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="79" splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="35" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="61" splitType="Stretch">
+			<staticText>
+				<reportElement x="169" y="0" width="100" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[VL_TOTAL]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="125" splitType="Stretch">
+			<textField>
+				<reportElement x="169" y="0" width="100" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.Double"><![CDATA[$F{VL_TOTAL}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="45" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="54" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="42" splitType="Stretch"/>
+	</summary>
+</jasperReport>

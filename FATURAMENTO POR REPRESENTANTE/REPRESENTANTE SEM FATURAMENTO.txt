@@ -1,0 +1,40 @@
+SELECT N.REPRESENTANTE, N.NOME_REPRESENTANTE, 
+	  N.GERENTE,
+	  (SELECT APELIDO FROM TGFVEN WHERE CODVEND = N.GERENTE)AS NOME_GERENTE,
+	  N.VLR_FATURAMENTO,
+      (SELECT MAX(DTNEG) 
+       FROM TGFCAB C 
+       WHERE C.CODVEND    = N.REPRESENTANTE 
+       AND   C.TIPMOV     = 'V' 
+       AND   C.STATUSNOTA = 'L'
+       AND   C.CODEMP     IN :EMPRESA
+	  AND   C.CODNAT     IN :DIVISAO
+       AND   C.CODTIPOPER IN(1100,1111,1237,1241,1242,1247,1258,1260,1277,1291,1316,1319)
+       AND   C.DTNEG      < :PERIODO.INI) AS DTNEG
+FROM (
+	SELECT V.CODVEND AS REPRESENTANTE, V.APELIDO AS NOME_REPRESENTANTE, V.CODGER AS GERENTE, ISNULL(C.VLR_NOTA, 0) AS VLR_FATURAMENTO
+      FROM TGFVEN V LEFT JOIN (
+		SELECT CAB.CODVEND, SUM(ISNULL(CAB.VLRNOTA,0)) AS VLR_NOTA
+                                 FROM TGFCAB CAB, TGFITE ITE, TGFPRO PRO
+                                 WHERE CAB.TIPMOV      = 'V'
+                                 AND   CAB.STATUSNOTA  = 'L'
+                                 AND   CAB.DTNEG      >= :PERIODO.INI
+                                 AND   CAB.DTNEG      <= :PERIODO.FIN
+                                 AND   CAB.CODEMP     IN :EMPRESA
+			                       AND   ISNULL(PRO.AD_GRUPOPRODGERENCIAL,'N') IN :GRPGER
+                                 AND   ISNULL(PRO.AD_COLECAO,'N')    IN :COLECAO
+                                 AND   ISNULL(PRO.AD_MODELO,'0')     IN :MODELO
+                                 AND   ISNULL(PRO.AD_MOD_ESTOJO,'N') IN :MODESTOJO
+                                 AND   ISNULL(PRO.AD_TIPO_PROD,'N')  IN :TIPOPROD
+                                 AND   CAB.CODTIPOPER IN(1100,1111,1237,1241,1242,1247,1258,1260,1277,1291,1316,1319)
+                                 AND   CAB.NUNOTA      = ITE.NUNOTA
+								 AND   ITE.CODPROD     = PRO.CODPROD
+        GROUP BY CAB.CODVEND) C
+      ON V.CODVEND     = C.CODVEND WHERE V.ATIVO='S') N
+
+WHERE N.VLR_FATURAMENTO = 0
+AND   ISNULL((SELECT AD_CODNAT FROM TGFVEN WHERE CODVEND = N.GERENTE), 0) IN :DIVISAO
+ORDER BY N.REPRESENTANTE
+              
+              
+              

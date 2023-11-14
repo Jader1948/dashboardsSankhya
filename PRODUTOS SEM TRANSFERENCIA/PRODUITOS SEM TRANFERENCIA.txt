@@ -1,0 +1,16 @@
+select tgfpro.referencia as REFERENCIA,
+	tgfpro.DESCRPROD AS PRODUTO,
+	tgfest.CODLOCAL AS COD_LOCAL,
+	tgfloc.DESCRLOCAL AS LOCAL,
+	(tgfest.ESTOQUE - tgfest.RESERVADO)AS ESTOQUE 
+from tgfest 
+inner join tgfpro on tgfpro.codprod = tgfest.codprod 
+inner join tgfloc on tgfloc.codlocal = tgfest.codlocal
+where tgfest.CODLOCAL = 100010000 and SUBSTRING(tgfpro.referencia, 3,len(tgfpro.referencia)) not in
+(
+select 
+SUBSTRING(tgfpro.referencia, 3,len(tgfpro.referencia)) 
+from tgfest 
+inner join tgfpro on tgfpro.CODPROD = tgfest.CODPROD 
+where left(tgfest.codlocal,3) >= 302
+)

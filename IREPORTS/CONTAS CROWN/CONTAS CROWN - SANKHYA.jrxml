@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PAINEL DE FATURAMENTO" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isFloatColumnFooter="true">
+	<property name="ireport.zoom" value="3.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="Table Dataset 1"/>
+	<subDataset name="dataset1"/>
+	<queryString>
+		<![CDATA[SELECT Y.CODBCO, Y.ABREVIATURA, Y.CODCTABCOINT, Y.DESCRICAO, Y.SALDO, Y.ULT_CONCILIACAO, SUM(Y.SALDO)SALDO_TOTAL FROM(
+
+SELECT X.CODBCO, X.ABREVIATURA,X.CODCTABCOINT,X.DESCRICAO,X.SALDO,X.ULT_CONCILIACAO FROM (
+SELECT
+  TEMP.CODBCO,
+  TEMP.ABREVIATURA,
+  TEMP.CODCTABCOINT,
+  TEMP.DESCRICAO,
+  SUM(TEMP.SALDO) AS SALDO,
+  MAX(TEMP.ULT_CONCILIACAO) AS ULT_CONCILIACAO
+/*  TEMP.CODEMP,
+  TEMP.CODPARC*/
+FROM (SELECT
+  BCO.CODBCO,
+  rtrim(BCO.ABREVIATURA)+ ' '+CTA.CODCTABCO AS ABREVIATURA,
+  CTA.CODCTABCOINT,
+  CTA.DESCRICAO,
+  (SELECT
+    MAX(MBC.DHCONCILIACAO)
+  FROM TGFMBC MBC
+  WHERE DATEADD(DAY, DATEDIFF(DAY, 0, MBC.DHCONCILIACAO), 0)
+  <= DATEADD(DAY, DATEDIFF(DAY, 1, GETDATE()), 0)
+  AND MBC.CODCTABCOINT = CTA.CODCTABCOINT)
+  AS ULT_CONCILIACAO,
+  T1.SALDOBCO
+  + ISNULL((SELECT
+    SUM(T7.VLRLANC * T7.RECDESP)
+  FROM TGFMBC T7
+  WHERE T7.CODCTABCOINT = 7
+  AND T7.DTLANC >= cast('01/'+cast(month(getdate()) as char(2))+'/'+cast(year(getdate()) as char(4)) as date)
+  AND T7.DTLANC < cast(cast(day(getdate()) as char(2))+'/'+cast(month(getdate()) as char(2))+'/'+cast(year(getdate()) as char(4)) as date)), 0)
+  AS SALDO,
+  CTA.CODEMP,
+  CTA.CODPARC,
+  BCO.NOMEBCO
+FROM TGFSBC T1
+INNER JOIN TSICTA CTA
+  ON T1.CODCTABCOINT = CTA.CODCTABCOINT
+INNER JOIN TSIBCO BCO
+  ON BCO.CODBCO = CTA.CODBCO
+WHERE T1.REFERENCIA = (SELECT
+  MAX(T2.REFERENCIA)
+FROM TGFSBC T2
+WHERE T2.CODCTABCOINT = T1.CODCTABCOINT
+AND (CTA.ATIVA = 'S')
+--T2.REFERENCIA < '2022-12-15'
+AND DATEADD(DAY, DATEDIFF(DAY, 0, T2.REFERENCIA), 0) <= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0))
+AND CTA.ATIVA = 'S'
+AND CTA.CLASSE = 'C'
+AND CTA.CODEMP IS NOT NULL) TEMP
+WHERE 1 = 1
+GROUP BY TEMP.CODBCO,
+		 TEMP.ABREVIATURA,
+         TEMP.CODCTABCOINT,
+         TEMP.DESCRICAO,
+         TEMP.CODEMP,
+         TEMP.CODPARC,
+         TEMP.NOMEBCO
+) X
+WHERE X.CODCTABCOINT =7
+
+
+union all
+
+
+SELECT Z.CODBCO,Z.ABREVIATURA,Z.CODCTABCOINT,Z.DESCRICAO,Z.SALDO,Z.ULT_CONCILIACAO FROM (
+SELECT
+  TEMP.CODBCO,
+  TEMP.ABREVIATURA,
+  TEMP.CODCTABCOINT,
+  TEMP.DESCRICAO,
+  SUM(TEMP.SALDO) AS SALDO,
+  MAX(TEMP.ULT_CONCILIACAO) AS ULT_CONCILIACAO
+/*  TEMP.CODEMP,
+  TEMP.CODPARC*/
+FROM (SELECT
+  BCO.CODBCO,
+  rtrim(BCO.ABREVIATURA)+ ' '+CTA.CODCTABCO AS ABREVIATURA,
+  CTA.CODCTABCOINT,
+  CTA.DESCRICAO,
+  (SELECT
+    MAX(MBC.DHCONCILIACAO)
+  FROM TGFMBC MBC
+  WHERE DATEADD(DAY, DATEDIFF(DAY, 0, MBC.DHCONCILIACAO), 0)
+  <= DATEADD(DAY, DATEDIFF(DAY, 1, GETDATE()), 0)
+  AND MBC.CODCTABCOINT = CTA.CODCTABCOINT)
+  AS ULT_CONCILIACAO,
+  T1.SALDOBCO + ISNULL((SELECT
+    SUM(T7.VLRLANC * T7.RECDESP)
+  FROM TGFMBC T7
+  INNER JOIN TSICTA CTA
+    ON T7.CODCTABCOINT = CTA.CODCTABCOINT
+  WHERE T1.CODCTABCOINT = T7.CODCTABCOINT
+  AND T7.DTLANC >= T1.REFERENCIA
+  AND (CTA.ATIVA = 'S')
+  AND DATEADD(DAY, DATEDIFF(DAY, 0, T7.DTLANC), 0) <=
+  DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0)), 0) AS SALDO,
+  CTA.CODEMP,
+  CTA.CODPARC,
+  BCO.NOMEBCO
+FROM TGFSBC T1
+INNER JOIN TSICTA CTA
+  ON T1.CODCTABCOINT = CTA.CODCTABCOINT
+INNER JOIN TSIBCO BCO
+  ON BCO.CODBCO = CTA.CODBCO
+WHERE T1.REFERENCIA = (SELECT
+  MAX(T2.REFERENCIA)
+FROM TGFSBC T2
+WHERE T2.CODCTABCOINT = T1.CODCTABCOINT
+AND (CTA.ATIVA = 'S')
+--T2.REFERENCIA < '2022-12-15'
+AND DATEADD(DAY, DATEDIFF(DAY, 0, T2.REFERENCIA), 0) < DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0))
+AND CTA.ATIVA = 'S'
+AND CTA.CLASSE = 'C'
+AND CTA.CODEMP IS NOT NULL) TEMP
+WHERE 1 = 1
+GROUP BY TEMP.CODBCO,
+		 TEMP.ABREVIATURA,
+         TEMP.CODCTABCOINT,
+         TEMP.DESCRICAO,
+         TEMP.CODEMP,
+         TEMP.CODPARC,
+         TEMP.NOMEBCO
+) Z
+WHERE Z.CODCTABCOINT IN(9,10,11)
+
+union all
+
+SELECT 422 AS CODBC,
+	'SAFRA 005859471' AS ABREVIATURA,
+	5 AS CODCTABCOINT,
+	'SAFRA CD PRINCIPAL' AS DESCRICAO,
+	SUM(T3.VLRLANC * T3.RECDESP) as SALDO,
+	CAST(max(t3.DHCONCILIACAO) as date) AS ULT_CONCILIACAO
+FROM TGFMBC T3
+WHERE T3.CODCTABCOINT =  5  AND T3.CONCILIADO =  'S' AND T3.DHCONCILIACAO  >= '01/01/2022' AND T3.DHCONCILIACAO  < GETDATE()
+
+UNION ALL
+
+SELECT 422 AS CODBC,
+ 'SAFRA 005859463' AS ABREVIATURA,
+ 6 AS CODCTABCOINT,
+ 'SAFRA CD CONSUMIDOR' AS DESCRICAO,
+ SUM(T3.VLRLANC * T3.RECDESP) as SALDO,
+ CAST(max(t3.DHCONCILIACAO) as date) AS ULT_CONCILIACAO
+FROM TGFMBC T3
+WHERE T3.CODCTABCOINT =  6  AND T3.CONCILIADO =  'S' AND T3.DHCONCILIACAO  >= '01/01/2022' AND T3.DHCONCILIACAO  < getdate()
+
+
+)Y
+GROUP BY Y.CODBCO, Y.ABREVIATURA, Y.CODCTABCOINT, Y.DESCRICAO, Y.SALDO, Y.ULT_CONCILIACAO]]>
+	</queryString>
+	<field name="CODBCO" class="java.lang.Integer"/>
+	<field name="ABREVIATURA" class="java.lang.String"/>
+	<field name="CODCTABCOINT" class="java.lang.Integer"/>
+	<field name="DESCRICAO" class="java.lang.String"/>
+	<field name="SALDO" class="java.math.BigDecimal"/>
+	<field name="ULT_CONCILIACAO" class="java.sql.Timestamp"/>
+	<field name="SALDO_TOTAL" class="java.math.BigDecimal"/>
+	<variable name="SALDO_SUM" class="java.math.BigDecimal" resetType="Column" calculation="Sum">
+		<variableExpression><![CDATA[$F{SALDO}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="79" splitType="Stretch">
+			<frame>
+				<reportElement mode="Opaque" x="0" y="0" width="555" height="79" backcolor="#0074D0"/>
+				<staticText>
+					<reportElement mode="Transparent" x="0" y="16" width="555" height="48" forecolor="#FFFFFF"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Lucida Sans" size="24" isBold="true"/>
+					</textElement>
+					<text><![CDATA[CONTAS BANCÁRIAS CROWN]]></text>
+				</staticText>
+			</frame>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="23" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="20" splitType="Stretch">
+			<rectangle>
+				<reportElement x="450" y="0" width="105" height="20" backcolor="#0074D0"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="450" y="0" width="82" height="20" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[DATA CONCILIAÇÃO]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="357" y="0" width="93" height="20" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="240" y="0" width="117" height="20" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="156" y="0" width="84" height="20" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="64" y="0" width="92" height="20" backcolor="#0074D0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="0" width="64" height="20" backcolor="#0074D0"/>
+			</rectangle>
+			<staticText>
+				<reportElement x="0" y="0" width="52" height="20" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[COD BANCO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="64" y="0" width="72" height="20" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[CONTA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="156" y="0" width="72" height="20" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[COD CONTA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="240" y="0" width="97" height="20" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[BANCO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="357" y="0" width="74" height="20" forecolor="#FFFFFF"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[SALDO]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="43" splitType="Stretch">
+			<rectangle>
+				<reportElement x="450" y="0" width="105" height="20"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="357" y="0" width="93" height="20"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="240" y="0" width="117" height="20"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="156" y="0" width="84" height="20"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="64" y="0" width="92" height="20"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="0" width="64" height="20"/>
+			</rectangle>
+			<textField>
+				<reportElement x="0" y="0" width="64" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Integer"><![CDATA[$F{CODBCO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="67" y="0" width="88" height="20"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle">
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{ABREVIATURA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="156" y="0" width="84" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Integer"><![CDATA[$F{CODCTABCOINT}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="244" y="0" width="113" height="20"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle">
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{DESCRICAO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤ #,##0.00">
+				<reportElement x="357" y="0" width="93" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{SALDO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="450" y="0" width="105" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{ULT_CONCILIACAO}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>
